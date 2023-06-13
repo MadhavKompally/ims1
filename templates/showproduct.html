@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Show Products</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Show Products</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Stock</th>
+                    <th>Product price</th>
+                    <th>Supplier ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.PRODUCT_id }}</td>
+                    <td>{{ product.PRODUCT_name }}</td>
+                    <td>{{ product.PRODUCT_STOCK }}</td>
+                    <td>{{ product.PRODUCT_price }}</td>
+                    <td>{{ product.SUPPLIER_ID }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Example product data from Flask
+        var products = JSON.parse('{{ data | tojson | safe }}');
+
+        // Display product data in the table
+        var productTable = document.querySelector('tbody');
+        products.forEach(function(product) {
+            var row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${product.PRODUCT_id}</td>
+                <td>${product.PRODUCT_name}</td>
+                <td>${product.PRODUCT_STOCK}</td>
+                <td>${product.PRODUCT_price}</td>
+                <td>${product.SUPPLIER_ID}</td>
+            `;
+            productTable.appendChild(row);
+        });
+    </script>
+</body>
+</html>
