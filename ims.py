@@ -1,19 +1,33 @@
 import pyodbc
 from flask import Flask,jsonify,request,render_template
 app = Flask(__name__)
+import sqlite3
 
-server = 'MADHAV\SQLEXPRESS'
-database = 'newims'
-driver =  '{SQL Server}'
 
-connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};trusted_connection = yes'
 
-conn = pyodbc.connect(connection_string)
-
-cn = conn.cursor()
-
-cn.execute("select * from customer")
-print(cn.fetchall())
+def idgenerator(tab):    
+    conn = sqlite3.connect('ims.db')
+    cn = conn.cursor()
+    idval = ''
+    if tab=='CUSTOMER':
+        idval = 'CUSTOMER_ID'
+    if tab=='PRODUCT':
+        idval = 'PRODUCT_ID'
+    if tab=='ORDERS':
+        idval = 'ORDER_ID'
+    if tab=='SUPLIER':
+        idval = 'SUPLIER_ID'
+    print(tab,idval)
+    cn.execute(f"SELECT {idval} FROM {tab}")
+    new = cn.fetchall()
+    cud = str(new[len(new)-1][0])
+    for i in range(len(str(cud))):
+        if cud[i].isnumeric():
+            f = i
+            break
+    myint = cud[f:]
+    myint = int(myint)+1
+    return idval[0:3]+str(myint)
 
 # customer_name = 'RAMAN'
 # customer_addr = 'NZB'
@@ -31,6 +45,7 @@ def home():
 
 @app.route("/show-customers")
 def customer_show():
+    conn = sqlite3.connect('ims.db')
     cn = conn.cursor()
     cn.execute("select * from customer")
     data = []
@@ -50,6 +65,7 @@ def customer_show():
 
 @app.route("/show-PRODUCT")
 def product_show():
+    conn = sqlite3.connect('ims.db')
     cn = conn.cursor()
     cn.execute("select * from PRODUCT")
     data = []
@@ -71,6 +87,7 @@ def product_show():
 
 @app.route("/show-supplier")
 def supplier_show():
+    conn = sqlite3.connect('ims.db')
     cn = conn.cursor()
     cn.execute("select * from supplier")
     data = []
@@ -89,6 +106,7 @@ def supplier_show():
 
 @app.route("/show-order")
 def order_show():
+    conn = sqlite3.connect('ims.db')
     cn = conn.cursor()
     cn.execute("select * from orders")
     data = []
@@ -111,12 +129,14 @@ def order_show():
 #++++++++++++++++++++++++++++insert data+++++++++++++++++++++++++++++++++++++++++++++++++++++
 @app.route("/add-customer",methods = ['GET','POST'])
 def addcustomer():
+     conn = sqlite3.connect('ims.db')
      if request.method=='POST':
          cn = conn.cursor()
          customername=request.form.get('name')
          customeraddr=request.form.get('address' )
          customeremail=request.form.get('email')
-         cn.execute(f"insert into customer(customer_name,customer_addr,customer_email)values('{customername}','{customeraddr}','{customeremail}')")
+         id = idgenerator('CUSTOMER')
+         cn.execute(f"insert into customer(customer_id,customer_name,customer_addr,customer_email)values('{id}','{customername}','{customeraddr}','{customeremail}')")
          conn.commit()
          print('Data as been inserted')
          return jsonify({'message':'sucessfull'})
@@ -129,6 +149,7 @@ def addcustomer():
 
 @app.route("/update-customer",methods = ['GET','POST'])    
 def updatecustomer():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         customerid=request.form.get('customerid')
@@ -149,13 +170,15 @@ def updatecustomer():
 
 @app.route("/add-product",methods = ['GET','POST'])
 def addproduct():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         productname=request.form.get('name')
         stock=request.form.get('stock' )
         price=request.form.get('price')
         supplierid=request.form.get('id')
-        cn.execute(f"insert into product(product_name,stock,price,supplier_id)values('{productname}','{stock}','{price}','{supplierid}')")
+        id = idgenerator('PRODUCT')
+        cn.execute(f"insert into product(product_id,product_name,stock,price,supplier_id)values('{id}','{productname}','{stock}','{price}','{supplierid}')")
         conn.commit()
         print('Data as been inserted')
         return jsonify({'message':'sucessfull'})
@@ -166,6 +189,7 @@ def addproduct():
 
 @app.route("/update-PRODUCT",methods = ['GET','POST'])    
 def updatePRODUCT():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         productid=request.form.get('productid')
@@ -184,12 +208,14 @@ def updatePRODUCT():
 
 @app.route("/add-supplier",methods = ['GET','POST'])
 def addsupplier():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         suppliername=request.form.get('name')
         supplieraddr=request.form.get('addr' )
         supplieremail=request.form.get('email')
-        cn.execute(f"insert into supplier(supplier_name,supplier_addr,supplier_email) values('{suppliername}','{supplieraddr}','{supplieremail}')")
+        id = idgenerator('SUPPLIER')
+        cn.execute(f"insert into supplier(supplier_id,supplier_name,supplier_addr,supplier_email) values('{id}','{suppliername}','{supplieraddr}','{supplieremail}')")
         conn.commit()
         print('Data as been inserted')
         return jsonify({'message':'sucessfull'})
@@ -200,6 +226,7 @@ def addsupplier():
     
 @app.route("/update-supplier",methods = ['GET','POST'])    
 def updatesupplier():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         supplierid=request.form.get('supplierid')
@@ -219,13 +246,15 @@ def updatesupplier():
 
 @app.route("/add-orders",methods = ['GET','POST'])
 def addorders():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         productid=request.form.get('productid')
         customerid=request.form.get('customerid' )
         quantity=request.form.get('quantity')
+        id = idgenerator('ORDERS')
         print(productid,customerid,quantity)
-        cn.execute(f"insert into orders(product_id,customer_id,quantity) values('{productid}','{customerid}',{quantity})")
+        cn.execute(f"insert into orders(order_id,product_id,customer_id,quantity) values('{id}','{productid}','{customerid}',{quantity})")
         conn.commit()
         print('Data as been inserted')
         return jsonify({'message':'sucessfull'})
@@ -235,6 +264,7 @@ def addorders():
     
 @app.route("/update-orders",methods = ['GET','POST'])    
 def updateorder():
+    conn = sqlite3.connect('ims.db')
     if request.method=='POST':
         cn = conn.cursor()
         orderid=request.form.get('order_id')
@@ -255,7 +285,8 @@ def updateorder():
 
 
 @app.route("/delete-supplier", methods=['GET','POST'])
-def deletesupplier():    
+def deletesupplier():
+    conn = sqlite3.connect('ims.db')    
     if request.method=='POST':
         cn=conn.cursor()
         supplierid=request.form.get('supplierid')
@@ -264,19 +295,58 @@ def deletesupplier():
         print('Data as been Delete')
         return jsonify({'message':'sucessfull'})
     else:
+        return render_template('deletesupplier.html')
+    
+
+
+
+
+            
+@app.route('/delete-customer',methods =['GET','POST'])
+def deletecustomer():
+    conn = sqlite3.connect('ims.db')
+    if request.method=='POST':
         cn=conn.cursor()
-        cn.execute('select * from supplier')
-        data=[]
-        for j in cn.fetchall():
-            supplier={}
-            supplier['supplier_id'] = j[0]
-            supplier['supplier_name'] = j[1]
-            supplier['supplier_addr'] = j[2]
-            supplier['supplier_email'] = j[3]
-            data.append(supplier)
-        return render_template('deletesupplier.html',data=data)
+        CUSTOMER_ID=request.form.get("customerid")
+        cn.execute(f"DELETE FROM CUSTOMER WHERE customer_id = '{CUSTOMER_ID}'")
+        conn.commit()
+        print('data inserted')
+        return jsonify({'message':'successful'})
+    else:
+        return render_template('deletecustomer.html')
+
+
+
+
+                
+@app.route('/delete-product',methods =['GET','POST'])
+def deleteproduct():
+    conn = sqlite3.connect('ims.db')
+    if request.method=='POST':
+        cn=conn.cursor()
+        product_id=request.form.get("productid")
+        cn.execute(f"DELETE FROM product WHERE product_id = '{product_id}'")
+        conn.commit()
+        print('data inserted')
+        return jsonify({'message':'successful'})
+    else:
+        return render_template('deleteproduct.html')
+
+
+
+
+@app.route('/delete-orders',methods =['GET','POST'])
+def deleteorders():
+    conn = sqlite3.connect('ims.db')
+    if request.method=='POST':
+        cn=conn.cursor()
+        order_id=request.form.get("orderid")
+        cn.execute(f"DELETE FROM orders WHERE order_id = '{order_id}'")
+        conn.commit()
+        print('data inserted')
+        return jsonify({'message':'successful'})
+    else:
+        return render_template('deleteorders.html')
 
 if __name__=='__main__':
-    app.run()
-
-    app.run()
+    app.run(host='0.0.0.0',port=5002,debug=False)
